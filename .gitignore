@@ -1,0 +1,5 @@
+sephora.json
+sephora.sqlite
+test2.py
+__pycache__/
+.DS_Store
