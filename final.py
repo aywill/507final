@@ -42,8 +42,8 @@ class product:
             print(f'Price: {self.price}')
         print(f'Category: {self.category}')
         print(f'Size: {self.size}')
-        print(f'Cruelty Free: {self.cruelty_free}')
-        print(f'In stock: {self.in_stock}\n')
+        print(f'Cruelty Free: {self.cruelty_free}\n')
+
         print(f'Details:\n{self.details}\n')
         print(f'Use:\n{self.use}\n')
         print(f'Ingredients: \n{self.ingredients}\n')
@@ -70,7 +70,6 @@ def save_cache(cache):
 def get_brand_instance(url, cache_dict):
     if url in cache_dict.keys():
         product_response_text=cache_dict[url]
-        print('using cache')
     else:
         response=requests.get(url)
         product_response_text=response.text
@@ -98,10 +97,10 @@ def get_brand_instance(url, cache_dict):
 
 def get_product_instance(url, brand, list, cache_dict):
     if url in cache_dict.keys():
-        print('Caching!!!!'*10)
+
         item_response_text=cache_dict[url]
     else:
-        print('LOADING LOADING LOADING'*10)
+
         response=requests.get(url)
         item_response_text=response.text
         cache_dict[url]=item_response_text
@@ -120,7 +119,10 @@ def get_product_instance(url, brand, list, cache_dict):
             size=None
             item_no=None
     info=soup_three.find_all('div', class_='css-pz80c5')
-    details=info[0].text
+    try:
+        details=info[0].text
+    except:
+        pass
     try:
         use=info[1].text
     except: 
@@ -138,7 +140,7 @@ def get_product_instance(url, brand, list, cache_dict):
             use=None
         except:
             pass        
-    if brand in list:
+    if brand.lower() in list:
         cruelty_free='Yes'
     else:
         cruelty_free='No'
@@ -148,13 +150,10 @@ def get_product_instance(url, brand, list, cache_dict):
 
 def build_cruelty_free_list(cache_dict):
     url='https://www.crueltyfreekitty.com/cruelty-free-sephora-brands/'
-    if url in cache_dict.keys():
-        response_text=cache_dict[url]
-    else:
-        response = requests.get(url)
-        response_text=response.text
-        cache_dict[url]=response_text
-        save_cache(cache_dict)
+
+    response = requests.get(url)
+    response_text=response.text
+
     soup = BeautifulSoup(response_text, 'html.parser')
     district=soup.find_all('ul', class_="sephora-list heart")
     test=district[3].find_all('a')
@@ -269,7 +268,7 @@ def load_products(object_list):
 
 if __name__ == "__main__":
     alpha_dict={'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'h': 7, 'i': 8, 'j': 9, 'k': 10, 'l': 11, 'm': 12, 'n': 13, 'o': 14, 'p': 15, 'q': 16, 'r': 17, 's': 18, 't': 19, 'u': 20, 'v': 21, 'w': 22, 'y': 23}
-    divider='---------------------------------'
+    divider='------------------------------------------------------------'
     end=''
     product_end=''
     CACHE_FILENAME='sephora.json'
@@ -297,31 +296,37 @@ if __name__ == "__main__":
         soup = BeautifulSoup(response_text, 'html.parser')
         district=soup.find_all('ul', class_="css-isj0xt")
         while True:
-            print('Search Brands From Sephora!')
-            print('Menu:\n 1.Explore Brands By First Letter\n 2.Search a Brand\n 3.Quit\n')
+            print('############################################\n##SEARCH BRANDS AND PRODUCTS FROM SEPHORA!##\n############################################\n')
+            print('MAIN MENU:\n 1.Explore Brands By First Letter\n 2.Search a Brand\n 3.Quit\n')
             print(divider)
             inital_input=input('Select: ')
+            print(divider)
             if inital_input=='1' or inital_input.lower()=='explore brands by first letter':
                 while True:
                     brand_dict={}
-                    x=input('Explore a Brand by First Letter: ').lower()
+                    x=input('Please Enter A Letter: ').lower()
                     if x.lower()=='quit':
                         print('Buh-Bye!')
+                        load_brands(brand_object_list)
+                        load_products(product_object_list)
                         quit()
                     try:
                         if len(x) >1 or x.isnumeric():
-                            print('Invalid Output')
+                            print('ERROR: Invalid Output')
                             pass
-                        else:
+                        else:                            
                             print(divider)
+                            print(divider)
+                            print(f'\nBRANDS THAT START WITH "{x}"')
                             test=district[alpha_dict[x]].find_all('a', class_="css-ekc7zl")
                             for a in test:
                                 brand_dict[a.get_text().lower().replace('\xa0','')]=a['href']
                             for keys in brand_dict.keys():
                                 print(keys)
+  
+                            print('\n')
                             print(divider)  
-                            crawl=input('select a brand to see top products:')
-                            print(divider)
+                            crawl=input('Search From the Brands Above to See Top Products: ')
                             break
                     except:
                         print(f'Sorry, No Brands Begin with the Letter "{x}"')       
@@ -330,20 +335,23 @@ if __name__ == "__main__":
             elif inital_input=='2' or inital_input.lower()=='search a brand':
                 while True:
                     brand_dict={}
-                    crawl=input('Search brand name: ')
+                    crawl=input('Search Brand Name: ')
                     if crawl.lower()=='quit':
                         print('Buh-Bye!')
                         quit()
-                    print(divider)
-                    x=crawl[0].lower()
-                    test=district[alpha_dict[x]].find_all('a', class_="css-ekc7zl")
-                    for a in test:
-                        brand_dict[a.get_text().lower().replace('\xa0','')]=a['href'][0:]
-                    if crawl not in brand_dict.keys():
-                        print(f'Sorry, {crawl} is not carried at Sephora.')
-                        pass
-                    else:
-                        break
+   
+                    try:    
+                        x=crawl[0].lower()
+                        test=district[alpha_dict[x]].find_all('a', class_="css-ekc7zl")
+                        for a in test:
+                            brand_dict[a.get_text().lower().replace('\xa0','')]=a['href'][0:]
+                        if crawl not in brand_dict.keys():
+                            print(f'Sorry, {crawl} is not carried at Sephora.')
+                            pass
+                        else:
+                            break
+                    except:
+                        print('ERROR: Invalid input!')       
                 break        
             elif inital_input=='3' or inital_input.lower()=='quit':
                 try:
@@ -357,47 +365,69 @@ if __name__ == "__main__":
                 print('Buh-Bye')
                 quit()                     
             else:
-                print('invalid input!')
+                print('ERROR: invalid input!')
                 pass
         #crawl to brand product page
+        if crawl.lower()=='quit':
+            print('Buh-Bye!')
+            quit()
+        print(divider)
+        print(divider)
+        print(f'\nPRODUCTS FROM "{crawl}"')
         brand_object=get_brand_instance('https://www.sephora.com'+ brand_dict[crawl], cache_dict)
         brand_object_list.append(brand_object)
 
         product_dict=brand_object.products
         product_list=[]
         while True:
+
             i=1    
             for key in product_dict.keys():
                 print(f'{i}. {key}')
                 product_list.append(key)
                 i=i+1
+            print('\n')
             print(divider)
-            # print('select a number to learn more\n')
-            product_input=int(input('Type number: '))-1
+
+            product_in=input('Select a Number to Learn More About a Product: ')
+            if product_in.lower()=='quit':
+                print('Buh-Bye!')
+                quit()
+
+            product_input=int(product_in)-1
+            print(divider)
             print(divider)
             product_url=url+ product_dict[product_list[product_input]]
             test_instance=get_product_instance(product_url, brand_object.name, cruelty_free_list, cache_dict)
             product_object_list.append(test_instance)
-            print(test_instance.brand_name)
-            print(test_instance.name)
+
             test_instance.print_info()
 
             print(divider)
-            print('Menu: \n 1. Read Product Review\n 2. View product on Sephora.com \n 3. Back to Product List \n 4. Back to Main Menu \n 5. Quit \n')
+            print(divider)
+            print('\nProduct Menu: \n 1. Read Product Review\n 2. View product on Sephora.com \n 3. Back to Product List \n 4. Back to Main Menu \n 5. Quit \n')
+            print(divider)
             menu_input=input('Select: ')
+            print(divider)
             if menu_input=='1':
-                print(divider)
                 print(f'\nProduct Review for {test_instance.name}\n')
                 count=0
                 for row in review_list:
                     if row['Brand']==test_instance.brand_name and row['Name']==test_instance.name:
                         print(f'Rating:{row["Rating"]}')
-                        print(f'{row["ReviewText"]}\n')
+                        print(f'{row["ReviewText"]}')
+                        print(divider)
                         count=count+1
                         if count==10:
                             break
                 if count==0:
-                    print('Sorry, this product does not have reviews\n')    
+                    print('SORRY, THIS PRODUCT DOES NOT HAVE ANY REVIEWS\n')
+                    reviews_input=input('Check for reviews on Sephora.com? YES/NO: ')
+                    if reviews_input.lower()=='yes':
+                        webbrowser.open_new(product_url)
+                    else:
+                        pass
+
                     print(divider)    
                 break        
             if menu_input=='2':
@@ -411,7 +441,7 @@ if __name__ == "__main__":
                 quit()
             if menu_input=='3':
                 pass
-            if menu_input=='5':
+            if menu_input=='4':
                 break           
 
            
